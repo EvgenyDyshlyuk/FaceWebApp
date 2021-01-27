@@ -1,0 +1,7 @@
+
+# activate the env
+.\env\Scripts\activate
+
+# deactivate
+deactivate
+
