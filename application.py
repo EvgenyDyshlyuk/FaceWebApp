@@ -18,8 +18,6 @@ path = os.getcwd()
 # file Upload
 UPLOAD_FOLDER = os.path.join(path, 'uploads')
 
-# remove folder if exists
-
 # If directory exists: delete it
 if os.path.isdir(UPLOAD_FOLDER):
     shutil.rmtree(UPLOAD_FOLDER)

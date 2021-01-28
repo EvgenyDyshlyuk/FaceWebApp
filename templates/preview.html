@@ -1,0 +1,10 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  
+    <h1>Face Images Preview</h1>
+    {% for file in files %}
+    <img src="{{ url_for('upload', filename=file) }}" style="width: 64px">
+    {% endfor %}
+
+{% endblock content %}
