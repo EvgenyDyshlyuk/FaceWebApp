@@ -75,7 +75,10 @@ def upload(filename):
 @app.route('/cropped')
 def cropped():
     utils.mtcnn_filter_save(app.config['UPLOAD_PATH'], app.config['CROPPED_PATH'])
+    X=utils.get_facenet_embeddings(app.config['CROPPED_PATH'])
+    print(X.shape)
     files = os.listdir(app.config['CROPPED_PATH'])
+
     return render_template('cropped.html', files=files)
 
 @app.route('/cropped/<filename>')

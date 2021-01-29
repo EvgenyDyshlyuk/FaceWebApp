@@ -4,6 +4,9 @@ from mtcnn import MTCNN
 import matplotlib.pyplot as plt
 import numpy as np
 
+from keras.models import load_model
+from keras.preprocessing.image import img_to_array
+
 MIN_FACE_SIZE = 10
 
 def read_image(file_path):
@@ -148,15 +151,65 @@ def mtcnn_filter_save_single(
                         imagefile_path = save_image_folder +'\\'+ image_name + '_' + str(image_idx) + '.' + img_ext
                         cv2.imwrite(imagefile_path, cv2.cvtColor(image_resized, cv2.COLOR_RGB2BGR))
 
-def mtcnn_filter_save(directory, save_folder):
+
+def listdir_fullpath(d):
+    return [os.path.join(d, f) for f in os.listdir(d)]
+
+def mtcnn_filter_save(directory, save_folder):    
+    paths = listdir_fullpath(directory)    
+    for path in paths:
+        mtcnn_filter_save_single(image_path=path, save_image_folder = save_folder)
+
+
+
+
+def get_facenet_embedding(image_path):
+    """Generate FaceNet embeddings
     
-    def listdir_fullpath(d):
-        return [os.path.join(d, f) for f in os.listdir(d)]
+    Args:
+        image_path (path)
+    
+    Returns:
+        embedding (128 dimension vector)
+    """
+
+    def standardize_image(image):
+        """Returns standardized image: (x-mean(X))/std(X)
+        
+        Args:
+            image:
+        
+        Returns:
+            image (standardized)
+        """   
+        mean, std = image.mean(), image.std()
+        return (image - mean) / std
+    
+    model = load_model(r'facenet_keras_pretrained/model/facenet_keras.h5')
+    #print('model_input:', model.inputs)
+    #print('model_output:', model.outputs)
+    #model.summary()
+
+    image = read_image(image_path)
+    image = cv2.resize(image, (160,160))
+    image=standardize_image(image)
+    input_arr = img_to_array(image) # Convert single image to a batch.
+    input_arr = np.array([input_arr])
+    return model.predict(input_arr)[0,:]
+
+
+def get_facenet_embeddings(directory):
+    # Get embeddings for all 
     
     paths = listdir_fullpath(directory)
     
-    for path in paths:
-        mtcnn_filter_save_single(image_path=path, save_image_folder = save_folder)
+    embeddings = []
+    for file_path in paths:
+        emb = get_facenet_embedding(file_path)
+        embeddings.append(emb)
+    embeddings = np.array(embeddings)
+    
+    return embeddings
 
 
 if __name__ == '__main__':
