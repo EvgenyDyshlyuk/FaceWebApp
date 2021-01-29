@@ -1,73 +1,88 @@
-import os
-from flask import Flask, flash, request, redirect, render_template
-from werkzeug.utils import secure_filename
+# https://blog.miguelgrinberg.com/post/handling-file-uploads-with-flask
 
+import imghdr
+import os
+from flask import Flask, render_template, request, redirect, url_for, abort, \
+    send_from_directory, flash
+from werkzeug.utils import secure_filename
 import shutil
 
-# https://medium.com/dev-genius/get-started-with-multiple-files-upload-using-flask-e8a2f5402e20
+import utils
 
-app=Flask(__name__)
-
+app = Flask(__name__)
 app.secret_key = "secret key"
 
-#It will allow below 16MB contents only, you can change it
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+MAX_FILE_SIZE = 16 # MB
+app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE * 1024 * 1024
+app.config['UPLOAD_EXTENSIONS'] = ['.jpg','.JPG', '.jpe', '.jpeg', '.jif',
+    '.jfif', '.jfi', '.png', '.gif']
 
-# Get current path
-path = os.getcwd()
-# file Upload
-UPLOAD_FOLDER = os.path.join(path, 'uploads')
+app.config['UPLOAD_PATH'] = 'tmp/uploads'
+app.config['CROPPED_PATH'] = 'tmp/cropped'
 
-# If directory exists: delete it
-if os.path.isdir(UPLOAD_FOLDER):
-    shutil.rmtree(UPLOAD_FOLDER)
-# Create new directory
+UPLOAD_FOLDER = os.path.join(os.getcwd(), app.config['UPLOAD_PATH'])
+CROPPED_FOLDER = os.path.join(os.getcwd(), app.config['CROPPED_PATH'])
+
+if os.path.isdir('tmp'):
+    shutil.rmtree('tmp')
+os.mkdir('tmp')
 os.mkdir(UPLOAD_FOLDER)
- 
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Allowed extension you can set your own
-ALLOWED_EXTENSIONS = set(['jpg', 'JPG', 'jpe', 'jpeg', 'jif', 'jfif', 'jfi',
-                          'gif', 'png'])
+os.mkdir(CROPPED_FOLDER)
 
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+def validate_image(stream):
+    """Get file format"""
+    header = stream.read(512) # read only first 516 bytes
+    stream.seek(0)
+    format = imghdr.what(None, header)
+    if not format:
+        return None
+    return '.' + format
 
+@app.errorhandler(413)
+def too_large(e):
+    return "File is too large, max size = "+str(MAX_FILE_SIZE)+" MB", 413
 
 @app.route('/')
-def upload_form():
-    return render_template('upload.html')
-
+def index():
+    files = os.listdir(app.config['UPLOAD_PATH'])
+    return render_template('index.html', files=files)
 
 @app.route('/', methods=['POST'])
-def upload_file():
-    if request.method == 'POST':
+def upload_files():
+    uploaded_file = request.files['file']
+    filename = secure_filename(uploaded_file.filename)
+    if filename != '':
+        file_ext = os.path.splitext(filename)[1]
+        if file_ext not in app.config['UPLOAD_EXTENSIONS']:
+            return "Invalid image extension", 400
+        elif validate_image(uploaded_file.stream) not in \
+        app.config['UPLOAD_EXTENSIONS']:
+            return "Invalid checked image extension", 400            
+        uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
+    return '', 204 #redirect('/preview') # #
 
-        if 'files[]' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
+@app.route('/preview')
+def preview():
+    #utils.mtcnn_filter_save(app.config['UPLOAD_PATH'])
+    files = os.listdir(app.config['UPLOAD_PATH'])
+    return render_template('preview.html', files=files)
+ 
+@app.route('/uploads/<filename>')
+def upload(filename):
+    return send_from_directory(app.config['UPLOAD_PATH'], filename)
 
-        files = request.files.getlist('files[]')
-        
-        ct=0
-        for file in files:
-            if file and allowed_file(file.filename):
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-                ct+=1
+@app.route('/cropped')
+def cropped():
+    utils.mtcnn_filter_save(app.config['UPLOAD_PATH'], app.config['CROPPED_PATH'])
+    files = os.listdir(app.config['CROPPED_PATH'])
+    return render_template('cropped.html', files=files)
 
-        flash(str(ct)+' file(s) successfully uploaded')
-        return redirect('/')
-        
+@app.route('/cropped/<filename>')
+def crop(filename):
+    return send_from_directory(app.config['CROPPED_PATH'], filename)
 
 
-@app.route('/about')
-def about():
-    return render_template('about.html')
 
 if __name__ == "__main__":
     app.run(host='127.0.0.1',port=5000,debug=True,threaded=True)
-
-    

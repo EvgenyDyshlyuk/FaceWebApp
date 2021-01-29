@@ -97,9 +97,9 @@ def resize_image(image, new_size):
 
 def mtcnn_filter_save_single(
         image_path,
-        save_image_folder = 'cropped',
+        save_image_folder,
         confidence_filter = 0.98,
-        face_height_filter = 100,
+        face_height_filter = 160,
         nose_shift_filter = 25,
         eye_line_angle_filter = 45,
         sharpness_filter = 20,
@@ -148,7 +148,7 @@ def mtcnn_filter_save_single(
                         imagefile_path = save_image_folder +'\\'+ image_name + '_' + str(image_idx) + '.' + img_ext
                         cv2.imwrite(imagefile_path, cv2.cvtColor(image_resized, cv2.COLOR_RGB2BGR))
 
-def mtcnn_filter_save(directory):
+def mtcnn_filter_save(directory, save_folder):
     
     def listdir_fullpath(d):
         return [os.path.join(d, f) for f in os.listdir(d)]
@@ -156,7 +156,7 @@ def mtcnn_filter_save(directory):
     paths = listdir_fullpath(directory)
     
     for path in paths:
-        mtcnn_filter_save_single(image_path=path)
+        mtcnn_filter_save_single(image_path=path, save_image_folder = save_folder)
 
 
 if __name__ == '__main__':
