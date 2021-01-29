@@ -7,6 +7,8 @@ from flask import Flask, render_template, request, redirect, url_for, abort, \
 from werkzeug.utils import secure_filename
 import shutil
 
+import utils
+
 app = Flask(__name__)
 app.secret_key = "secret key"
 
@@ -16,10 +18,17 @@ app.config['UPLOAD_EXTENSIONS'] = ['.jpg','.JPG', '.jpe', '.jpeg', '.jif',
     '.jfif', '.jfi', '.png', '.gif']
 app.config['UPLOAD_PATH'] = 'uploads'
 
+
 UPLOAD_FOLDER = os.path.join(os.getcwd(), app.config['UPLOAD_PATH'])
+CROPPED_FOLDER = os.path.join(os.getcwd(), 'cropped')
 if os.path.isdir(UPLOAD_FOLDER):
     shutil.rmtree(UPLOAD_FOLDER)
 os.mkdir(UPLOAD_FOLDER)
+
+if os.path.isdir(CROPPED_FOLDER):
+    shutil.rmtree(CROPPED_FOLDER)
+os.mkdir(CROPPED_FOLDER)
+
 
 def validate_image(stream):
     """Get file format"""
@@ -55,13 +64,24 @@ def upload_files():
 
 @app.route('/preview')
 def preview():
+    #utils.mtcnn_filter_save(app.config['UPLOAD_PATH'])
     files = os.listdir(app.config['UPLOAD_PATH'])
     return render_template('preview.html', files=files)
-
+ 
 @app.route('/uploads/<filename>')
 def upload(filename):
     return send_from_directory(app.config['UPLOAD_PATH'], filename)
 
+
+@app.route('/cropped')
+def cropped():
+    utils.mtcnn_filter_save(app.config['UPLOAD_PATH'])
+    files = os.listdir('cropped')
+    return render_template('cropped.html', files=files)
+
+@app.route('/cropped/<filename>')
+def crop(filename):
+    return send_from_directory('cropped', filename)
 
 if __name__ == "__main__":
     app.run(host='127.0.0.1',port=5000,debug=True,threaded=True)

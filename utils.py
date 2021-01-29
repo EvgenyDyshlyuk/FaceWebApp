@@ -99,7 +99,7 @@ def mtcnn_filter_save_single(
         image_path,
         save_image_folder = 'cropped',
         confidence_filter = 0.98,
-        face_height_filter = 10,
+        face_height_filter = 100,
         nose_shift_filter = 25,
         eye_line_angle_filter = 45,
         sharpness_filter = 20,
@@ -148,19 +148,26 @@ def mtcnn_filter_save_single(
                         imagefile_path = save_image_folder +'\\'+ image_name + '_' + str(image_idx) + '.' + img_ext
                         cv2.imwrite(imagefile_path, cv2.cvtColor(image_resized, cv2.COLOR_RGB2BGR))
 
+def mtcnn_filter_save(directory):
+    
+    def listdir_fullpath(d):
+        return [os.path.join(d, f) for f in os.listdir(d)]
+    
+    paths = listdir_fullpath(directory)
+    
+    for path in paths:
+        mtcnn_filter_save_single(image_path=path)
 
-'''    paths = []
-    for path in os.listdir(photos_folder):
-        full_path = os.path.join(photos_folder, path)
-        if os.path.isfile(full_path):
-            paths.append(full_path)'''
 
 if __name__ == '__main__':
     #image = read_image(image_path)
     #plt.imshow(image)
     #plt.show()
 
-    image_path = 'Test/Photoset/2008/1.jpg'
-    mtcnn_filter_save_single(image_path)
+    #image_path = 'Test/Photoset/2008/1.jpg'
+    #mtcnn_filter_save_single(image_path)
+    
+    directory = 'Test/Photoset/2008'
+    mtcnn_filter_save(directory)
 
 
