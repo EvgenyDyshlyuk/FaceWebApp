@@ -4,7 +4,9 @@
   
     <h1>Cropped Files Preview</h1>
     {% for file in files %}
-    <img src="{{ url_for('crop', filename=file) }}" style="width: 64px">
+    <img src="{{ url_for('crop', filename=file) }}" style="width: 128px">
     {% endfor %}
+
+    <a href="/tsne">TSNE</a>
 
 {% endblock content %}

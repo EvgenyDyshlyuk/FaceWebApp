@@ -1,13 +1,33 @@
 import os
-import cv2
-from mtcnn import MTCNN
-import matplotlib.pyplot as plt
+import shutil
+
 import numpy as np
+
+import matplotlib.pyplot as plt
+
+from matplotlib.offsetbox import OffsetImage, AnnotationBbox
+
+import cv2
+
+from mtcnn import MTCNN
 
 from keras.models import load_model
 from keras.preprocessing.image import img_to_array
 
-MIN_FACE_SIZE = 10
+from sklearn.manifold import TSNE
+
+
+MIN_FACE_SIZE = 160
+
+
+
+def delete_create_dirs(dirs: list):
+    """Delete and re-create directories in the list of directories provided"""
+    for dir in dirs:
+        shutil.rmtree(dir, ignore_errors = True, onerror=None)
+    for dir in dirs:
+        os.mkdir(dir)
+
 
 def read_image(file_path):
     """Read jpg image file using cv2
@@ -22,8 +42,8 @@ def read_image(file_path):
     image = cv2.cvtColor(imageBGR, cv2.COLOR_BGR2RGB) # cv2 uses BGR color ordering, so need to change order for RGB. https://stackoverflow.com/questions/52494592/wrong-colours-with-cv2-imdecode-python-opencv
     return image
 
-detector = MTCNN(min_face_size = MIN_FACE_SIZE)
 
+detector = MTCNN(min_face_size = MIN_FACE_SIZE)
 def get_MTCNN_result(file_path):
     """Get mtcnn result for 1 jpg file
     
@@ -62,7 +82,8 @@ def get_rotated_keypoints(keypoints, rot_mat):
     Returns:
         keypoints in new coordinates
     """    
-    def get_rotated_coordinate(rot_mat, old_coord): #https://cristianpb.github.io/blog/image-rotation-opencv
+    #https://cristianpb.github.io/blog/image-rotation-opencv
+    def get_rotated_coordinate(rot_mat, old_coord):
         expanded_coord = old_coord + (1,) 
         product = np.dot(rot_mat,expanded_coord)
         new_coord = int(product[0]), int(product[1])               
@@ -102,8 +123,8 @@ def mtcnn_filter_save_single(
         image_path,
         save_image_folder,
         confidence_filter = 0.98,
-        face_height_filter = 160,
-        nose_shift_filter = 25,
+        face_height_filter = MIN_FACE_SIZE,
+        nose_shift_filter = 15,
         eye_line_angle_filter = 45,
         sharpness_filter = 20,
     ):
@@ -158,12 +179,13 @@ def listdir_fullpath(d):
 def mtcnn_filter_save(directory, save_folder):    
     paths = listdir_fullpath(directory)    
     for path in paths:
-        mtcnn_filter_save_single(image_path=path, save_image_folder = save_folder)
+        mtcnn_filter_save_single(image_path=path,
+                                 save_image_folder=save_folder)
 
 
 
-
-def get_facenet_embedding(image_path):
+model = load_model(r'facenet_keras_pretrained/model/facenet_keras.h5')
+def get_facenet_embedding(image_path, model=model):
     """Generate FaceNet embeddings
     
     Args:
@@ -183,12 +205,7 @@ def get_facenet_embedding(image_path):
             image (standardized)
         """   
         mean, std = image.mean(), image.std()
-        return (image - mean) / std
-    
-    model = load_model(r'facenet_keras_pretrained/model/facenet_keras.h5')
-    #print('model_input:', model.inputs)
-    #print('model_output:', model.outputs)
-    #model.summary()
+        return (image - mean) / std   
 
     image = read_image(image_path)
     image = cv2.resize(image, (160,160))
@@ -199,17 +216,54 @@ def get_facenet_embedding(image_path):
 
 
 def get_facenet_embeddings(directory):
-    # Get embeddings for all 
-    
-    paths = listdir_fullpath(directory)
-    
+    # Get embeddings for all    
+    paths = listdir_fullpath(directory)    
     embeddings = []
     for file_path in paths:
-        emb = get_facenet_embedding(file_path)
+        emb = get_facenet_embedding(file_path, model=model)
         embeddings.append(emb)
     embeddings = np.array(embeddings)
     
     return embeddings
+
+
+def tsne(directory):
+
+    paths =  listdir_fullpath(directory)  
+    X = get_facenet_embeddings(directory)
+    X_tsne = TSNE(perplexity=2, learning_rate = 1000, n_iter=1000, random_state=0).fit_transform(X)
+
+    x = X_tsne[:,0]
+    y = X_tsne[:,1]
+
+    # The idea on how to plot faces is taken from https://stackoverflow.com/questions/22566284/matplotlib-how-to-plot-images-instead-of-points
+    def getImage(path, size):
+        image = plt.imread(path)
+        image = resize_image(image, size)
+        return OffsetImage(image)
+
+    plt.rcParams["figure.figsize"] = (20,20)
+    # This part is plotting faces
+    fig, ax = plt.subplots()
+    ax.scatter(x, y)
+    ax.set_axis_off()
+    for x0, y0, path in zip(x, y, paths):
+        ab = AnnotationBbox(getImage(path, (50,50)), (x0, y0), frameon=False)
+        ax.add_artist(ab)
+    
+    fig.savefig('tmp/tsne/tsne.jpg')
+
+    # This part is plotting colors
+    # creation_dates = df_filtered.creation_date
+    # Creation date is shown with colors on the plot below
+    # Spectral(rainbow) palette is used with older photos shown in red and recent in blue
+    
+    #sns.scatterplot(x=x, y=y, hue = creation_dates, s=7000, palette=sns.color_palette('Spectral',len(set(creation_dates))))
+    
+    #plt.legend([],[], frameon=False) # hide the legend if it too long
+
+    # Set figure background
+    #sns.set_style("whitegrid", {'axes.grid' : False,'axes.facecolor': 'white'})
 
 
 if __name__ == '__main__':

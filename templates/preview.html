@@ -4,7 +4,7 @@
   
     <h1>Downladed Files Preview</h1>
     {% for file in files %}
-    <img src="{{ url_for('upload', filename=file) }}" style="width: 64px">
+    <img src="{{ url_for('upload', filename=file) }}" style="width: 128px">
     {% endfor %}
 
     <a href="/cropped">Cropped images</a>
