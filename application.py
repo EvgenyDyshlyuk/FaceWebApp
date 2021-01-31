@@ -62,34 +62,36 @@ def upload_files():
         uploaded_file.save(os.path.join(app.config['UPLOAD_PATH'], filename))
     return ('', 204) # 204 empty response
 
+@app.route('/uploads/<filename>')
+def upload_send(filename):
+    return send_from_directory(app.config['UPLOAD_PATH'], filename)
+
 @app.route('/preview')
 def preview():
     files = os.listdir(app.config['UPLOAD_PATH'])
     return render_template('preview.html', files=files)
  
-@app.route('/uploads/<filename>')
-def upload(filename):
-    return send_from_directory(app.config['UPLOAD_PATH'], filename)
-
 @app.route('/cropped')
 def cropped():
     utils.mtcnn_filter_save(app.config['UPLOAD_PATH'],
                             app.config['CROPPED_PATH'])
     files = os.listdir(app.config['CROPPED_PATH'])
+    print("files", files)
     return render_template('cropped.html', files=files)
 
 @app.route('/cropped/<filename>')
-def crop(filename):
+def crop_send(filename):
     return send_from_directory(app.config['CROPPED_PATH'], filename)
 
 @app.route('/tsne')
 def tsne():
-    utils.tsne(app.config['CROPPED_PATH'])    
-    filename = app.config['TSNE_PATH']
-    return render_template("tsne.html", filename = filename)
+    utils.tsne(app.config['CROPPED_PATH'])
+    files = os.listdir(app.config['TSNE_PATH'])
+    print('files:',files)
+    return render_template("tsne.html", files = files)
 
 @app.route('/tsne/<filename>')
-def tsne_(filename):
+def tsne_send(filename):
     return send_from_directory(app.config['TSNE_PATH'], filename)
 
 if __name__ == "__main__":

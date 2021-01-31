@@ -3,9 +3,8 @@
 {% block content %}
   
     <h1>TSNE Representation</h1>
-    <div>
-        <img src="{{url_for('tsne', filename=filename)}}">
-    </div> 
-
+    {% for file in files %}
+    <img src="{{ url_for('tsne_send', filename=file) }}" style="width: 800px">
+    {% endfor %}
 
 {% endblock content %}

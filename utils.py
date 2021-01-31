@@ -246,12 +246,12 @@ def tsne(directory):
     # This part is plotting faces
     fig, ax = plt.subplots()
     ax.scatter(x, y)
-    ax.set_axis_off()
+    #ax.set_axis_off()
     for x0, y0, path in zip(x, y, paths):
         ab = AnnotationBbox(getImage(path, (50,50)), (x0, y0), frameon=False)
         ax.add_artist(ab)
     
-    fig.savefig('tmp/tsne/tsne.jpg')
+    fig.savefig('tmp/tsne/tsne.png')
 
     # This part is plotting colors
     # creation_dates = df_filtered.creation_date
