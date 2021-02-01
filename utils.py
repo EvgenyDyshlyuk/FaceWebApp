@@ -130,7 +130,8 @@ def mtcnn_filter_save_single(
     ):
 
     _, file_name = os.path.split(image_path)
-    image_name, img_ext = file_name.split('.')
+
+    image_name, img_ext = os.path.splitext(file_name)
     print(image_name, img_ext)
 
     MTCNN_res = get_MTCNN_result(image_path)

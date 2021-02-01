@@ -43,10 +43,11 @@ def too_large(e):
     return "File is too large, max size = " + \
         str(app.config['MAX_CONTENT_LENGTH']/(1024*1024)) + " MB", 413
 
+
 @app.route('/')
 def index():
-    files = os.listdir(app.config['UPLOAD_PATH'])
-    return render_template('index.html', files=files)
+    files_upload = os.listdir(app.config['UPLOAD_PATH'])
+    return render_template('index.html', files=files_upload)
 
 @app.route('/', methods=['POST'])
 def upload_files():
@@ -66,29 +67,34 @@ def upload_files():
 def upload_send(filename):
     return send_from_directory(app.config['UPLOAD_PATH'], filename)
 
+
+
 @app.route('/preview')
 def preview():
     files = os.listdir(app.config['UPLOAD_PATH'])
     return render_template('preview.html', files=files)
  
+
+
 @app.route('/cropped')
 def cropped():
     utils.mtcnn_filter_save(app.config['UPLOAD_PATH'],
                             app.config['CROPPED_PATH'])
-    files = os.listdir(app.config['CROPPED_PATH'])
-    print("files", files)
-    return render_template('cropped.html', files=files)
+    files_cropped = os.listdir(app.config['CROPPED_PATH'])
+    print("files", files_cropped)
+    return render_template('cropped.html', files=files_cropped)
 
 @app.route('/cropped/<filename>')
 def crop_send(filename):
     return send_from_directory(app.config['CROPPED_PATH'], filename)
 
+
 @app.route('/tsne')
 def tsne():
     utils.tsne(app.config['CROPPED_PATH'])
-    files = os.listdir(app.config['TSNE_PATH'])
-    print('files:',files)
-    return render_template("tsne.html", files = files)
+    files_tsne = os.listdir(app.config['TSNE_PATH'])
+    print('files:',files_tsne)
+    return render_template("tsne.html", files = files_tsne)
 
 @app.route('/tsne/<filename>')
 def tsne_send(filename):
