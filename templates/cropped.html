@@ -2,11 +2,14 @@
 
 {% block content %}
   
-    <h1>Cropped Files Preview</h1>
-    {% for file in files %}
-    <img src="{{ url_for('crop_send', filename=file) }}" style="width: 128px">
-    {% endfor %}
+    <h1>Cropped Images Preview</h1>
+    <div>
+        {% for file in files %}
+            <img src="{{ url_for('crop_send', filename=file) }}" style="width: 128px">
+        {% endfor %}
+    </div>
 
-    <a href="/tsne">TSNE</a>
+
+    <a href="/tsne">Generate Embeddings and Show TSNE Representation</a>
 
 {% endblock content %}

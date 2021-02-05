@@ -2,11 +2,14 @@
 
 {% block content %}
   
-    <h1>Downladed Files Preview</h1>
-    {% for file in files %}
-    <img src="{{ url_for('upload_send', filename=file) }}" style="width: 128px">
-    {% endfor %}
+    <h1>Downladed Images Preview</h1>
+    
+    <div>
+        {% for file in files %}
+            <img src="{{ url_for('upload_send', filename=file) }}" style="width: 128px">
+        {% endfor %}
+    </div>
 
-    <a href="/cropped">Cropped images</a>
+    <a href="/cropped">Use MTCNN to Crop Images</a>
 
 {% endblock content %}

@@ -1,5 +1,6 @@
 import os
 import shutil
+import datetime
 
 import numpy as np
 
@@ -7,7 +8,7 @@ import matplotlib.pyplot as plt
 
 from matplotlib.offsetbox import OffsetImage, AnnotationBbox
 
-import cv2
+from cv2 import cv2
 
 from mtcnn import MTCNN
 
@@ -124,14 +125,14 @@ def mtcnn_filter_save_single(
         save_image_folder,
         confidence_filter = 0.98,
         face_height_filter = MIN_FACE_SIZE,
-        nose_shift_filter = 15,
+        nose_shift_filter = 25,
         eye_line_angle_filter = 45,
         sharpness_filter = 20,
     ):
 
     _, file_name = os.path.split(image_path)
-
-    image_name, img_ext = os.path.splitext(file_name)
+    image_name, img_ext = os.path.splitext(file_name)  
+    
     print(image_name, img_ext)
 
     MTCNN_res = get_MTCNN_result(image_path)
@@ -170,8 +171,16 @@ def mtcnn_filter_save_single(
                     if sharpness >= sharpness_filter:
                         image_cropped = image_rotated[upper_left_y:upper_left_y + height, upper_left_x:upper_left_x + width]
                         image_resized = resize_image(image_cropped, (160,160))
-                        imagefile_path = save_image_folder +'\\'+ image_name + '_' + str(image_idx) + '.' + img_ext
+                        imagefile_path = save_image_folder +'\\'+ image_name + '_' + str(image_idx) + img_ext
                         cv2.imwrite(imagefile_path, cv2.cvtColor(image_resized, cv2.COLOR_RGB2BGR))
+                    else:
+                        print('image sharpness < ', sharpness_filter)
+                else:
+                    print('grayscale image')
+            else:
+                print('nose shift:', nose_shift, '>', 'filter:', nose_shift_filter, 'or eye_line_angle:', abs(angle), '>', 'filter', eye_line_angle_filter)
+        else:
+            print('low_confidence:', confidence, 'or height:', height, '<', 'height_filter:', face_height_filter)
 
 
 def listdir_fullpath(d):
@@ -180,7 +189,17 @@ def listdir_fullpath(d):
 def mtcnn_filter_save(directory, save_folder):    
     paths = listdir_fullpath(directory)    
     for path in paths:
-        mtcnn_filter_save_single(image_path=path,
+        # check if this file already in savefolder:
+        files_in_save = os.listdir(save_folder)
+        filenames_in_save = [os.path.splitext(x)[0] for x in files_in_save]
+        original_filenames = set([x[0:x.rfind('_')] for x in filenames_in_save])
+
+        file_ = os.path.split(path)[1]
+        file_name = os.path.splitext(file_)[0]
+
+        if file_name not in original_filenames:
+            #print('filename:', file_name, 'not in:', original_filenames)
+            mtcnn_filter_save_single(image_path=path,
                                  save_image_folder=save_folder)
 
 
@@ -228,7 +247,7 @@ def get_facenet_embeddings(directory):
     return embeddings
 
 
-def tsne(directory):
+def tsne(directory, save_directory):
 
     paths =  listdir_fullpath(directory)  
     X = get_facenet_embeddings(directory)
@@ -252,7 +271,14 @@ def tsne(directory):
         ab = AnnotationBbox(getImage(path, (50,50)), (x0, y0), frameon=False)
         ax.add_artist(ab)
     
-    fig.savefig('tmp/tsne/tsne.png')
+    time_now  = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+
+    # clean the folder
+    for f in os.listdir(save_directory):
+        os.remove(os.path.join(save_directory, f))
+    #print('save_dir:', save_directory)  
+
+    fig.savefig(save_directory + '/' + time_now + '_tsne.png') # changing name is usefull so that browser cashing is avoided
 
     # This part is plotting colors
     # creation_dates = df_filtered.creation_date
@@ -267,7 +293,7 @@ def tsne(directory):
     #sns.set_style("whitegrid", {'axes.grid' : False,'axes.facecolor': 'white'})
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     #image = read_image(image_path)
     #plt.imshow(image)
     #plt.show()
@@ -275,7 +301,5 @@ if __name__ == '__main__':
     #image_path = 'Test/Photoset/2008/1.jpg'
     #mtcnn_filter_save_single(image_path)
     
-    directory = 'Test/Photoset/2008'
-    mtcnn_filter_save(directory)
-
-
+    #directory = 'Test/Photoset/2008'
+    #mtcnn_filter_save(directory)

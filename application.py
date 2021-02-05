@@ -20,14 +20,11 @@ app.config['UPLOAD_PATH'] = 'tmp/uploads'
 app.config['CROPPED_PATH'] = 'tmp/cropped'
 app.config['TSNE_PATH'] = 'tmp/tsne'
 
-
-#UPLOAD_FOLDER = os.path.join(os.getcwd(), app.config['UPLOAD_PATH'])
-#CROPPED_FOLDER = os.path.join(os.getcwd(), app.config['CROPPED_PATH'])
-#TSNE_FOLDER = os.path.join(os.getcwd(), app.config['TSNE_PATH'])
-
-utils.delete_create_dirs([app.config['UPLOAD_PATH'],
-                          app.config['CROPPED_PATH'],
-                          app.config['TSNE_PATH']])
+@app.before_first_request
+def delete_and_create_dirs():
+    utils.delete_create_dirs([app.config['UPLOAD_PATH'],
+                            app.config['CROPPED_PATH'],
+                            app.config['TSNE_PATH']])
 
 def validate_image(stream):
     """Get file format from first 512 file bytes using imghdr"""
@@ -75,7 +72,6 @@ def preview():
     return render_template('preview.html', files=files)
  
 
-
 @app.route('/cropped')
 def cropped():
     utils.mtcnn_filter_save(app.config['UPLOAD_PATH'],
@@ -91,14 +87,16 @@ def crop_send(filename):
 
 @app.route('/tsne')
 def tsne():
-    utils.tsne(app.config['CROPPED_PATH'])
+    utils.tsne(app.config['CROPPED_PATH'], app.config['TSNE_PATH'])
     files_tsne = os.listdir(app.config['TSNE_PATH'])
     print('files:',files_tsne)
-    return render_template("tsne.html", files = files_tsne)
+    return render_template("tsne.html", files_tsne = files_tsne)
 
 @app.route('/tsne/<filename>')
 def tsne_send(filename):
     return send_from_directory(app.config['TSNE_PATH'], filename)
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, threaded=True)
