@@ -249,48 +249,52 @@ def get_facenet_embeddings(directory):
 
 def tsne(directory, save_directory):
 
-    paths =  listdir_fullpath(directory)  
-    X = get_facenet_embeddings(directory)
-    X_tsne = TSNE(perplexity=2, learning_rate = 1000, n_iter=1000, random_state=0).fit_transform(X)
+    paths =  listdir_fullpath(directory)
+    if len(paths) < 2:
+        print('At least 2 photos required')
+        pass
+    else:
+        X = get_facenet_embeddings(directory)
+        X_tsne = TSNE(perplexity=2, learning_rate = 1000, n_iter=1000, random_state=0).fit_transform(X)
 
-    x = X_tsne[:,0]
-    y = X_tsne[:,1]
+        x = X_tsne[:,0]
+        y = X_tsne[:,1]
 
-    # The idea on how to plot faces is taken from https://stackoverflow.com/questions/22566284/matplotlib-how-to-plot-images-instead-of-points
-    def getImage(path, size):
-        image = plt.imread(path)
-        image = resize_image(image, size)
-        return OffsetImage(image)
+        # The idea on how to plot faces is taken from https://stackoverflow.com/questions/22566284/matplotlib-how-to-plot-images-instead-of-points
+        def getImage(path, size):
+            image = plt.imread(path)
+            image = resize_image(image, size)
+            return OffsetImage(image)
 
-    plt.rcParams["figure.figsize"] = (20,20)
-    # This part is plotting faces
-    fig, ax = plt.subplots()
-    ax.scatter(x, y)
-    #ax.set_axis_off()
-    for x0, y0, path in zip(x, y, paths):
-        ab = AnnotationBbox(getImage(path, (50,50)), (x0, y0), frameon=False)
-        ax.add_artist(ab)
-    
-    time_now  = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+        plt.rcParams["figure.figsize"] = (20,20)
+        # This part is plotting faces
+        fig, ax = plt.subplots()
+        ax.scatter(x, y)
+        #ax.set_axis_off()
+        for x0, y0, path in zip(x, y, paths):
+            ab = AnnotationBbox(getImage(path, (50,50)), (x0, y0), frameon=False)
+            ax.add_artist(ab)
+        
+        time_now  = datetime.datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
 
-    # clean the folder
-    for f in os.listdir(save_directory):
-        os.remove(os.path.join(save_directory, f))
-    #print('save_dir:', save_directory)  
+        # clean the folder
+        for f in os.listdir(save_directory):
+            os.remove(os.path.join(save_directory, f))
+        #print('save_dir:', save_directory)  
 
-    fig.savefig(save_directory + '/' + time_now + '_tsne.png') # changing name is usefull so that browser cashing is avoided
+        fig.savefig(save_directory + '/' + time_now + 'tsne.png') # changing name is usefull so that browser cashing is avoided
 
-    # This part is plotting colors
-    # creation_dates = df_filtered.creation_date
-    # Creation date is shown with colors on the plot below
-    # Spectral(rainbow) palette is used with older photos shown in red and recent in blue
-    
-    #sns.scatterplot(x=x, y=y, hue = creation_dates, s=7000, palette=sns.color_palette('Spectral',len(set(creation_dates))))
-    
-    #plt.legend([],[], frameon=False) # hide the legend if it too long
+        # This part is plotting colors
+        # creation_dates = df_filtered.creation_date
+        # Creation date is shown with colors on the plot below
+        # Spectral(rainbow) palette is used with older photos shown in red and recent in blue
+        
+        #sns.scatterplot(x=x, y=y, hue = creation_dates, s=7000, palette=sns.color_palette('Spectral',len(set(creation_dates))))
+        
+        #plt.legend([],[], frameon=False) # hide the legend if it too long
 
-    # Set figure background
-    #sns.set_style("whitegrid", {'axes.grid' : False,'axes.facecolor': 'white'})
+        # Set figure background
+        #sns.set_style("whitegrid", {'axes.grid' : False,'axes.facecolor': 'white'})
 
 
 #if __name__ == '__main__':
