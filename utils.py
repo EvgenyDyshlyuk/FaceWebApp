@@ -115,7 +115,7 @@ def resize_image(image, new_size):
     
     Returns:
         image: rescaled image
-    """ 
+    """
     image_resized = cv2.resize(image, new_size)
     return image_resized
 
@@ -123,11 +123,11 @@ def resize_image(image, new_size):
 def mtcnn_filter_save_single(
         image_path,
         save_image_folder,
-        confidence_filter = 0.98,
+        confidence_filter = 0.99,
         face_height_filter = MIN_FACE_SIZE,
-        nose_shift_filter = 25,
+        nose_shift_filter = 20,
         eye_line_angle_filter = 45,
-        sharpness_filter = 20,
+        sharpness_filter = 25,
     ):
 
     _, file_name = os.path.split(image_path)
@@ -146,6 +146,10 @@ def mtcnn_filter_save_single(
         # change box from rectangular to square
         side = max(height, width)
         upper_left_x = int(upper_left_x + width/2 - side/2)
+        if upper_left_x < 0:
+            upper_left_x = 0
+        if upper_left_y < 0:
+            upper_left_y = 0
         width=height=side
 
         if (confidence >= confidence_filter) and (height >= face_height_filter):
