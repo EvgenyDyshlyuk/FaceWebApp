@@ -16,15 +16,17 @@ app.secret_key = \
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024 # 16 MB
 app.config['UPLOAD_EXTENSIONS'] = ['.jpg','.JPG', '.jpe', '.jpeg', '.jif',
                                    '.jfif', '.jfi', '.png', '.gif']
+app.config['TMP'] = 'tmp'
 app.config['UPLOAD_PATH'] = 'tmp/uploads'
 app.config['CROPPED_PATH'] = 'tmp/cropped'
 app.config['TSNE_PATH'] = 'tmp/tsne'
 
 @app.before_first_request
 def delete_and_create_dirs():
-    utils.delete_create_dirs([app.config['UPLOAD_PATH'],
-                            app.config['CROPPED_PATH'],
-                            app.config['TSNE_PATH']])
+    utils.delete_create_dirs([app.config['TMP'],
+                              app.config['UPLOAD_PATH'],
+                              app.config['CROPPED_PATH'],
+                              app.config['TSNE_PATH']])
 
 def validate_image(stream):
     """Get file format from first 512 file bytes using imghdr"""
@@ -100,5 +102,5 @@ def tsne_send(filename):
 
 if __name__ == "__main__":
 
-    app.run(host="127.0.0.1", port=5000, debug=True, threaded=True)
-    # app.run(host="0.0.0.0", port=5000, debug=False, threaded=True) #production
+    #app.run(host="127.0.0.1", port=5000, debug=True, threaded=True)
+    app.run(host="0.0.0.0", port=5000, debug=False, threaded=True) #production
