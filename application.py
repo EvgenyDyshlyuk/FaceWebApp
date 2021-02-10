@@ -28,7 +28,7 @@ def delete_and_create_dirs():
 
 def validate_image(stream):
     """Get file format from first 512 file bytes using imghdr"""
-    header = stream.read(512) # read only first 516 bytes
+    header = stream.read(512) # read only first 512 bytes
     stream.seek(0) # return to byte 0
     format = imghdr.what(None, header)
     if not format:
@@ -99,4 +99,6 @@ def tsne_send(filename):
 
 
 if __name__ == "__main__":
-    app.run(debug=True, threaded=True)
+
+    app.run(host="127.0.0.1", port=5000, debug=True, threaded=True)
+    # app.run(host="0.0.0.0", port=5000, debug=False, threaded=True) #production

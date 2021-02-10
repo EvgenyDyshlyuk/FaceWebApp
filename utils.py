@@ -25,7 +25,10 @@ MIN_FACE_SIZE = 160
 def delete_create_dirs(dirs: list):
     """Delete and re-create directories in the list of directories provided"""
     for dir in dirs:
-        shutil.rmtree(dir, ignore_errors = True, onerror=None)
+        try:
+            shutil.rmtree(dir, ignore_errors = True, onerror=None)
+        except:
+            pass
     for dir in dirs:
         os.mkdir(dir)
 
@@ -175,7 +178,7 @@ def mtcnn_filter_save_single(
                     if sharpness >= sharpness_filter:
                         image_cropped = image_rotated[upper_left_y:upper_left_y + height, upper_left_x:upper_left_x + width]
                         image_resized = resize_image(image_cropped, (160,160))
-                        imagefile_path = save_image_folder +'\\'+ image_name + '_' + str(image_idx) + img_ext
+                        imagefile_path = save_image_folder +'/'+ image_name + '_' + str(image_idx) + img_ext
                         cv2.imwrite(imagefile_path, cv2.cvtColor(image_resized, cv2.COLOR_RGB2BGR))
                     else:
                         print('image sharpness < ', sharpness_filter)
@@ -208,7 +211,7 @@ def mtcnn_filter_save(directory, save_folder):
 
 
 
-model = load_model(r'facenet_keras_pretrained/model/facenet_keras.h5')
+model = load_model('facenet_keras.h5')
 def get_facenet_embedding(image_path, model=model):
     """Generate FaceNet embeddings
     
@@ -284,30 +287,6 @@ def tsne(directory, save_directory):
         # clean the folder
         for f in os.listdir(save_directory):
             os.remove(os.path.join(save_directory, f))
-        #print('save_dir:', save_directory)  
+
 
         fig.savefig(save_directory + '/' + time_now + 'tsne.png') # changing name is usefull so that browser cashing is avoided
-
-        # This part is plotting colors
-        # creation_dates = df_filtered.creation_date
-        # Creation date is shown with colors on the plot below
-        # Spectral(rainbow) palette is used with older photos shown in red and recent in blue
-        
-        #sns.scatterplot(x=x, y=y, hue = creation_dates, s=7000, palette=sns.color_palette('Spectral',len(set(creation_dates))))
-        
-        #plt.legend([],[], frameon=False) # hide the legend if it too long
-
-        # Set figure background
-        #sns.set_style("whitegrid", {'axes.grid' : False,'axes.facecolor': 'white'})
-
-
-#if __name__ == '__main__':
-    #image = read_image(image_path)
-    #plt.imshow(image)
-    #plt.show()
-
-    #image_path = 'Test/Photoset/2008/1.jpg'
-    #mtcnn_filter_save_single(image_path)
-    
-    #directory = 'Test/Photoset/2008'
-    #mtcnn_filter_save(directory)
